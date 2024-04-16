@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/fabric": "^5.3.7",
+    "babel-plugin-styled-components": "^2.1.4",
     "fabric": "^5.3.0",
     "next": "14.2.1",
     "react": "^18",

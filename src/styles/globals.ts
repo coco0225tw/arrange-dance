@@ -11,6 +11,7 @@ html,body{
     height: 100%;
     position: fixed;
     overflow: scroll;
+    background-color: #222222;
 }
 *{
     box-sizing: border-box;
