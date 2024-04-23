@@ -8,51 +8,39 @@ declare module 'fabric/fabric-impl' {
   }
 } //todo*
 //https://stackoverflow.com/questions/74032025/how-to-add-a-custom-attribute-to-a-fabricjs-object-with-typescript
-import { roundPosition, handleEdgePosition, handleOverLapPosition } from '@/utils/fabricUtils';
+import { roundPositionAndSnap, handleEdgePosition } from '@/utils/fabricUtils';
 export const useFabric = () => {
   const {
     gridSize,
     defaultCol,
     defaultRow,
     defaultDancerCount,
-    radiusOffset,
     gridBackGroundColor,
-    nameColor,
     defaultCircleColor,
+    overlapOffset,
   } = fabricConfig;
   const canvasRef = useRef<Canvas | null>(null);
-  const size = gridSize;
+  ////會從store拿
   const column = defaultCol;
   const row = defaultRow;
-  const circleRadius = size / 2 - radiusOffset;
-  const circleColor = defaultCircleColor;
+
   const dancer = defaultDancerCount;
 
   const boundaryAxis = {
-    left: size,
-    top: size,
-    right: size * (column - 1),
-    bottom: size * (row - 1),
+    left: fabricConfig.stepUnit(),
+    top: fabricConfig.stepUnit(),
+    right: gridSize * column - fabricConfig.stepUnit(),
+    bottom: gridSize * row - fabricConfig.stepUnit(),
   };
+  const isTextVisible = true;
+  ////
 
-  const initCanvas = () => {
-    canvasRef.current = new fabric.Canvas('c', {
-      selection: false,
-      width: size * column + 1,
-      height: size * row + 1,
-      backgroundColor: gridBackGroundColor,
-    });
-  };
-  const generateGrid = () => {
-    addVerticalLines();
-    addHorizontalLines();
-  };
   const addVerticalLines = () => {
     const columnCounts = column + 1;
     const startY = 0;
-    const endY = size * row;
+    const endY = gridSize * row;
     for (let i = 0; i < columnCounts; i++) {
-      const startX = i * size;
+      const startX = i * gridSize;
       const endX = startX;
       addLine([startX, startY, endX, endY]);
     }
@@ -60,135 +48,156 @@ export const useFabric = () => {
   const addHorizontalLines = () => {
     const rowCounts = row + 1;
     const startX = 0;
-    const endX = size * column;
+    const endX = gridSize * column;
     for (let i = 0; i < rowCounts; i++) {
-      const startY = i * size;
+      const startY = i * gridSize;
       const endY = startY;
       addLine([startX, startY, endX, endY]);
     }
   };
-  const addLine = (position: [startX: number, startY: number, endX: number, endY: number]) => {
-    canvasRef?.current?.add(new fabric.Line(position, fabricConfig.lineStyle()));
+  const addLine = (positions: [startX: number, startY: number, endX: number, endY: number]) => {
+    canvasRef?.current?.add(new fabric.Line(positions, { ...fabricConfig.lineStyle() }));
   };
 
-  const addCircle = () => {
+  const addCircle = (color: string) => {
     return new fabric.Circle({
-      radius: circleRadius,
-      fill: circleColor,
-      originX: 'center',
-      originY: 'center',
-      centeredRotation: true,
-      hasControls: false,
-      selectable: true,
+      ...fabricConfig.circleStyle(),
+      fill: color,
     });
   };
-  const addText = (setting: { text: string; visible: boolean; nameColor: string }) => {
-    const { text, visible, nameColor } = setting;
+  const addText = (setting: { text: string; visible: boolean }) => {
+    const { text, visible } = setting;
     return new fabric.Text(text, {
-      fontSize: 24,
-      originX: 'center',
-      originY: 'center',
-      selectable: false,
-      hasControls: false,
-      fill: nameColor,
+      ...fabricConfig.textStyle(),
       visible: visible,
       //fontFamily: '3d.demo', //todo
     });
   };
   const addGroup = (
-    textSetting: { text: string; visible: boolean; nameColor: string },
-    position: { left: number; top: number }
+    textSetting: { text: string; visible: boolean },
+    position: { left: number; top: number },
+    circleColor: string
   ) => {
     canvasRef?.current?.add(
-      new fabric.Group([addCircle(), addText(textSetting)], {
+      new fabric.Group([addCircle(circleColor), addText(textSetting)], {
+        ...fabricConfig.groupStyle(),
         left: position.left,
         top: position.top,
-        originX: 'center',
-        originY: 'center',
-        hasControls: false,
-        width: size,
-        height: size,
         id: textSetting.text,
       })
     );
   };
 
   //todo eslint not working
+  //initial state
   useEffect(() => {
+    const initCanvas = () => {
+      canvasRef.current = new fabric.Canvas('c', {
+        selection: false,
+        width: gridSize * column + 1,
+        height: gridSize * row + 1,
+        backgroundColor: gridBackGroundColor,
+      });
+    };
+
+    const generateGrid = () => {
+      addVerticalLines();
+      addHorizontalLines();
+    };
+
+    const addDancers = (isTextVisible: boolean) => {
+      for (let i = 1; i <= dancer; i++) {
+        const textSetting = {
+          text: i.toString(),
+          visible: isTextVisible,
+        };
+        const circleColor = defaultCircleColor;
+        const position = { left: boundaryAxis.left, top: i * gridSize };
+        addGroup(textSetting, position, circleColor);
+      }
+    };
+
     initCanvas();
     generateGrid();
-
-    for (let i = 1; i <= dancer; i++) {
-      const textSetting = {
-        text: i.toString(),
-        visible: true,
-        nameColor: nameColor,
-      };
-      const position = { left: boundaryAxis.left, top: i * size };
-      addGroup(textSetting, position);
-    } //todo
+    addDancers(isTextVisible);
 
     return () => {
       canvasRef?.current?.dispose();
     };
   }, [dancer]);
 
+  useEffect(() => {
+    const canvas = canvasRef?.current as fabric.Canvas;
+
+    function movingDancerAnimate(e: fabric.IEvent<MouseEvent>, scale: number) {
+      const target = e.target;
+      if (!target) return;
+      fabric.util.animate({
+        startValue: target.scaleX,
+        endValue: scale,
+        duration: 100,
+        onChange: function (value) {
+          target.scale(value);
+          canvas.renderAll();
+        },
+        onComplete: function () {
+          target.setCoords();
+        },
+      });
+    }
+    canvas.on('mouse:down', function (options) {
+      movingDancerAnimate(options, 1.1);
+      options?.target?.bringToFront();
+    });
+    canvas.on('mouse:up', function (options) {
+      movingDancerAnimate(options, 1);
+    });
+    return () => {
+      canvas.off('mouse:down');
+      canvas.off('mouse:up');
+    };
+  }, []);
+
   // snap to grid and edge
   useEffect(() => {
-    canvasRef?.current?.on('object:moving', function (options) {
+    const canvas = canvasRef?.current as fabric.Canvas;
+
+    canvas.on('object:moving', function (options) {
       const target = options.target;
       if (!target) return;
 
-      const targetLeft = target.left;
-      const targetTop = target.top;
-      if (!targetLeft || !targetTop) return;
-
       target.setCoords();
-
-      const handleEdgeX = handleEdgePosition(roundPosition(targetLeft, size), boundaryAxis.left, boundaryAxis.right);
-      const handleEdgeY = handleEdgePosition(roundPosition(targetTop, size), boundaryAxis.top, boundaryAxis.bottom);
-      //snap to grid
+      const targetLeft = target.left as number;
+      const targetTop = target.top as number;
+      const roundX = roundPositionAndSnap(targetLeft, fabricConfig.stepUnit());
+      const roundY = roundPositionAndSnap(targetTop, fabricConfig.stepUnit());
+      const handleEdgeX = handleEdgePosition(roundX, boundaryAxis.left, boundaryAxis.right);
+      const handleEdgeY = handleEdgePosition(roundY, boundaryAxis.top, boundaryAxis.bottom);
       target.set({
         left: handleEdgeX,
         top: handleEdgeY,
       });
 
       //overlap
-      const group = canvasRef.current?.getObjects('group');
-      group?.forEach((obj) => {
+      const group = canvas.getObjects('group') as fabric.Object[];
+      group.forEach((obj) => {
         if (obj === target) return;
-
-        const objLeft = obj.left;
-        const objWidth = obj.width;
-        const objTop = obj.top;
-        const objHeight = obj.height;
-        const targetWidth = target.width;
-        const targetHeight = target.height;
-        if (!objLeft || !objWidth || !objTop || !objHeight || !targetWidth || !targetHeight) return;
 
         const isOverlap =
           target.isContainedWithinObject(obj) ||
           target.intersectsWithObject(obj) ||
           obj.isContainedWithinObject(target);
+
         if (isOverlap) {
-          const distLeft = (objLeft + objWidth) / 2 - (targetLeft + targetWidth) / 2;
-          const distTop = (objTop + objHeight) / 2 - (targetTop + targetHeight) / 2;
-          //todo
-          const left = distLeft > 0 ? objLeft - targetWidth : objLeft + targetWidth;
-          const top = distTop > 0 ? objTop - targetHeight : objTop + targetHeight;
-
-          const handleEdgeX = handleEdgePosition(roundPosition(left, size), boundaryAxis.left, boundaryAxis.right);
-          const handleEdgeY = handleEdgePosition(roundPosition(top, size), boundaryAxis.top, boundaryAxis.bottom);
-
           target.set({
-            left: handleEdgeX,
-            top: handleEdgeY,
+            left: handleEdgeX + overlapOffset,
+            top: handleEdgeY + overlapOffset,
           });
         }
       });
     });
     return () => {
-      canvasRef?.current?.off();
+      canvas.off('object:moving');
     };
   }, []);
 };
