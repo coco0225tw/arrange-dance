@@ -1,8 +1,15 @@
 export const fabricConfig = {
   gridSize: 70,
-  defaultRow: 8,
-  defaultCol: 8,
-  defaultDancerCount: 5,
+  defaultRow: function (dancerCount: number) {
+    return 10;
+  },
+  defaultCol: function (dancerCount: number) {
+    return 10;
+  },
+  defaultDancerCount: 2,
+  minDancerCount: 2,
+  maxDanceCount: 30,
+
   gridBackGroundColor: '#222222',
   nameColor: '#eeeeee',
   defaultCircleColor: '#f37966',

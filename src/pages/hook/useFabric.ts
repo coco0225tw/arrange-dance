@@ -8,23 +8,18 @@ declare module 'fabric/fabric-impl' {
   }
 } //todo*
 //https://stackoverflow.com/questions/74032025/how-to-add-a-custom-attribute-to-a-fabricjs-object-with-typescript
-import { roundPositionAndSnap, handleEdgePosition } from '@/utils/fabricUtils';
+import { roundPositionAndSnap, handleEdgePosition, handleStartingArrangePosition } from '@/utils/fabricUtils';
+export type startingPositionType = 'vertical' | 'horizontal';
+export type startingPositionLine = 1 | 2 | 3;
 export const useFabric = () => {
-  const {
-    gridSize,
-    defaultCol,
-    defaultRow,
-    defaultDancerCount,
-    gridBackGroundColor,
-    defaultCircleColor,
-    overlapOffset,
-  } = fabricConfig;
+  const { gridSize, defaultDancerCount, gridBackGroundColor, defaultCircleColor, overlapOffset } = fabricConfig;
   const canvasRef = useRef<Canvas | null>(null);
   ////會從store拿
-  const column = defaultCol;
-  const row = defaultRow;
+  const column = fabricConfig.defaultCol(defaultDancerCount);
+  const row = fabricConfig.defaultRow(defaultDancerCount);
 
   const dancer = defaultDancerCount;
+  const startingPositionType = 'horizontal';
 
   const boundaryAxis = {
     left: fabricConfig.stepUnit(),
@@ -106,13 +101,21 @@ export const useFabric = () => {
     };
 
     const addDancers = (isTextVisible: boolean) => {
-      for (let i = 1; i <= dancer; i++) {
+      const getPositionFunc = handleStartingArrangePosition({
+        positionType: startingPositionType,
+        col: column,
+        row: row,
+        dancerCount: dancer,
+        step: fabricConfig.stepUnit(),
+      });
+
+      for (let i = 0; i < dancer; i++) {
         const textSetting = {
-          text: i.toString(),
+          text: (i + 1).toString(),
           visible: isTextVisible,
         };
         const circleColor = defaultCircleColor;
-        const position = { left: boundaryAxis.left, top: i * gridSize };
+        const position = getPositionFunc(i);
         addGroup(textSetting, position, circleColor);
       }
     };
@@ -129,7 +132,7 @@ export const useFabric = () => {
   useEffect(() => {
     const canvas = canvasRef?.current as fabric.Canvas;
 
-    function movingDancerAnimate(e: fabric.IEvent<MouseEvent>, scale: number) {
+    function movingDancerAnimate(e: fabric.IEvent<MouseEvent> | fabric.IEvent<Event>, scale: number) {
       const target = e.target;
       if (!target) return;
       fabric.util.animate({
@@ -149,6 +152,7 @@ export const useFabric = () => {
       movingDancerAnimate(options, 1.1);
       options?.target?.bringToFront();
     });
+    //todo mobile
     canvas.on('mouse:up', function (options) {
       movingDancerAnimate(options, 1);
     });
