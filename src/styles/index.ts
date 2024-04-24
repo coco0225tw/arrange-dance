@@ -6,4 +6,9 @@ export const HomeWrapper = styled.div`
   height: 100%;
   align-items: center;
   justify-content: center;
+  .canvas-container {
+    @media (min-width: 560px) {
+      transform: scale(1.5);
+    }
+  }
 `;

@@ -1,4 +1,5 @@
 import { HomeWrapper } from '@/styles';
+import { useRef } from 'react';
 import { useFabric } from './hook/useFabric';
 export default function Home() {
   useFabric();

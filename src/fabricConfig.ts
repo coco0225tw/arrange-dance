@@ -1,12 +1,12 @@
 export const fabricConfig = {
-  gridSize: 70,
+  gridSize: 44,
   defaultRow: function (dancerCount: number) {
-    return 10;
+    return 8;
   },
   defaultCol: function (dancerCount: number) {
-    return 10;
+    return 8;
   },
-  defaultDancerCount: 2,
+  defaultDancerCount: 5,
   minDancerCount: 2,
   maxDanceCount: 30,
 
@@ -24,7 +24,7 @@ export const fabricConfig = {
     return {
       ...this.commonObjectStyle,
       stroke: this.nameColor,
-      strokeWidth: 0.5,
+      strokeWidth: 0.2,
     };
   },
   groupStyle: function () {
@@ -38,16 +38,16 @@ export const fabricConfig = {
   textStyle: function () {
     return {
       ...this.commonObjectStyle,
-      fontSize: 20,
+      fontSize: 12,
       fill: this.nameColor,
     };
   },
   circleStyle: function () {
     return {
       ...this.commonObjectStyle,
-      radius: this.gridSize / 2 - 10,
-      stroke: this.nameColor,
-      strokeWidth: 0.5,
+      radius: this.gridSize / 4 + 2,
+      stroke: 'rgb(243,121,102,0.5)', //todo
+      strokeWidth: 6,
       strokeUniform: true,
     };
   },
