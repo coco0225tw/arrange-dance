@@ -1,4 +1,4 @@
-import { startingPositionType, startingPositionLine } from '@/pages/hook/useFabric';
+import { startingPositionType } from '@/pages/hook/useFabric';
 export function handleEdgePosition(roundPosition: number, min: number, max: number) {
   return roundPosition < min ? min : roundPosition > max ? max : roundPosition;
 }
