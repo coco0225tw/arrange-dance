@@ -1,7 +1,7 @@
 export const fabricConfig = {
   gridSize: 44,
   defaultRow: function (dancerCount: number) {
-    return 8;
+    return 6;
   },
   defaultCol: function (dancerCount: number) {
     return 8;

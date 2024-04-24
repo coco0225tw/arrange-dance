@@ -8,9 +8,13 @@ export const HomeWrapper = styled.div`
   justify-content: center;
   min-width: 380px;
 
-  .canvas-container {
+  .canvas_wrapper {
     @media (min-width: 560px) {
       transform: scale(1.5);
+    }
+
+    .canvas-container {
+      margin: 20px;
     }
   }
 `;

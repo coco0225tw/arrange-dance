@@ -1,5 +1,5 @@
 import { fabric } from 'fabric';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Canvas } from 'fabric/fabric-impl';
 import { fabricConfig } from '../../fabricConfig';
 declare module 'fabric/fabric-impl' {
@@ -11,9 +11,9 @@ declare module 'fabric/fabric-impl' {
 import { roundPositionAndSnap, handleEdgePosition, handleStartingArrangePosition } from '@/utils/fabricUtils';
 export type startingPositionType = 'vertical' | 'horizontal';
 export type startingPositionLine = 1 | 2 | 3; //todo
-export const useFabric = () => {
+export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
   const { gridSize, defaultDancerCount, gridBackGroundColor, defaultCircleColor, overlapOffset } = fabricConfig;
-  const canvasRef = useRef<Canvas | null>(null);
+
   ////會從store拿
   const column = fabricConfig.defaultCol(defaultDancerCount);
   const row = fabricConfig.defaultRow(defaultDancerCount);
@@ -132,7 +132,7 @@ export const useFabric = () => {
   useEffect(() => {
     const canvas = canvasRef?.current as fabric.Canvas;
 
-    function movingDancerAnimate(e: fabric.IEvent<MouseEvent> | fabric.IEvent<Event>, scale: number) {
+    function movingDancerAnimate(e: fabric.IEvent<MouseEvent>, scale: number) {
       const target = e.target;
       if (!target) return;
       fabric.util.animate({
@@ -183,7 +183,7 @@ export const useFabric = () => {
       });
 
       //overlap
-      const group = canvas.getObjects('group') as fabric.Object[];
+      const group = canvas.getObjects('group') as fabric.Group[];
       group.forEach((obj) => {
         if (obj === target) return;
 
