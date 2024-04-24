@@ -1,5 +1,5 @@
 import { fabric } from 'fabric';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { Canvas } from 'fabric/fabric-impl';
 import { fabricConfig } from '../../fabricConfig';
 declare module 'fabric/fabric-impl' {
@@ -20,113 +20,113 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
   const dancer = defaultDancerCount;
   const startingPositionType = 'horizontal';
 
-  const boundaryAxis = {
-    left: fabricConfig.stepUnit(),
-    top: fabricConfig.stepUnit(),
-    right: gridSize * column - fabricConfig.stepUnit(),
-    bottom: gridSize * row - fabricConfig.stepUnit(),
-  };
   const isTextVisible = true;
   ////
 
-  const addVerticalLines = () => {
-    const columnCounts = column + 1;
-    const startY = 0;
-    const endY = gridSize * row;
-    for (let i = 0; i < columnCounts; i++) {
-      const startX = i * gridSize;
-      const endX = startX;
-      addLine([startX, startY, endX, endY]);
-    }
-  };
-  const addHorizontalLines = () => {
-    const rowCounts = row + 1;
-    const startX = 0;
-    const endX = gridSize * column;
-    for (let i = 0; i < rowCounts; i++) {
-      const startY = i * gridSize;
-      const endY = startY;
-      addLine([startX, startY, endX, endY]);
-    }
-  };
-  const addLine = (positions: [startX: number, startY: number, endX: number, endY: number]) => {
-    canvasRef?.current?.add(new fabric.Line(positions, { ...fabricConfig.lineStyle() }));
-  };
-
-  const addCircle = (color: string) => {
-    return new fabric.Circle({
-      ...fabricConfig.circleStyle(),
-      fill: color,
-    });
-  };
-  const addText = (setting: { text: string; visible: boolean }) => {
-    const { text, visible } = setting;
-    return new fabric.Text(text, {
-      ...fabricConfig.textStyle(),
-      visible: visible,
-      //fontFamily: '3d.demo', //todo
-    });
-  };
-  const addGroup = (
-    textSetting: { text: string; visible: boolean },
-    position: { left: number; top: number },
-    circleColor: string
-  ) => {
-    canvasRef?.current?.add(
-      new fabric.Group([addCircle(circleColor), addText(textSetting)], {
-        ...fabricConfig.groupStyle(),
-        left: position.left,
-        top: position.top,
-        id: textSetting.text,
-      })
-    );
-  };
-
   //todo eslint not working
   //initial state
+
   useEffect(() => {
-    const initCanvas = () => {
+    initCanvas();
+
+    function initCanvas() {
       canvasRef.current = new fabric.Canvas('c', {
         selection: false,
         width: gridSize * column + 1,
         height: gridSize * row + 1,
         backgroundColor: gridBackGroundColor,
       });
-    };
-
-    const generateGrid = () => {
-      addVerticalLines();
-      addHorizontalLines();
-    };
-
-    const addDancers = (isTextVisible: boolean) => {
-      const getPositionFunc = handleStartingArrangePosition({
-        positionType: startingPositionType,
-        col: column,
-        row: row,
-        dancerCount: dancer,
-        step: fabricConfig.stepUnit(),
-      });
-
-      for (let i = 0; i < dancer; i++) {
-        const textSetting = {
-          text: (i + 1).toString(),
-          visible: isTextVisible,
-        };
-        const circleColor = defaultCircleColor;
-        const position = getPositionFunc(i);
-        addGroup(textSetting, position, circleColor);
-      }
-    };
-
-    initCanvas();
-    generateGrid();
-    addDancers(isTextVisible);
+    }
 
     return () => {
       canvasRef?.current?.dispose();
     };
-  }, [dancer]);
+  }, [canvasRef, column, gridBackGroundColor, gridSize, row]);
+
+  useEffect(() => {
+    generateGrid();
+
+    function generateGrid() {
+      addVerticalLines();
+      addHorizontalLines();
+    }
+    function addVerticalLines() {
+      const columnCounts = column + 1;
+      const startY = 0;
+      const endY = gridSize * row;
+      for (let i = 0; i < columnCounts; i++) {
+        const startX = i * gridSize;
+        const endX = startX;
+        addLine([startX, startY, endX, endY]);
+      }
+    }
+    function addHorizontalLines() {
+      const rowCounts = row + 1;
+      const startX = 0;
+      const endX = gridSize * column;
+      for (let i = 0; i < rowCounts; i++) {
+        const startY = i * gridSize;
+        const endY = startY;
+        addLine([startX, startY, endX, endY]);
+      }
+    }
+    function addLine(positions: [startX: number, startY: number, endX: number, endY: number]) {
+      canvasRef?.current?.add(new fabric.Line(positions, { ...fabricConfig.lineStyle() }));
+    }
+  }, [canvasRef, column, gridSize, row]);
+
+  useEffect(() => {
+    addDancers(isTextVisible);
+
+    function addDancers(isTextVisible: boolean) {
+      const dancerCount = fabricConfig.defaultDancerCount;
+      const getPositionFunc = handleStartingArrangePosition({
+        positionType: startingPositionType,
+        col: column,
+        row: row,
+        dancerCount: dancerCount,
+        step: fabricConfig.stepUnit(),
+      });
+
+      for (let i = 0; i < dancerCount; i++) {
+        const textSetting = {
+          text: (i + 1).toString(),
+          visible: isTextVisible,
+        };
+        const circleColor = fabricConfig.defaultCircleColor;
+        const position = getPositionFunc(i);
+        addGroup(textSetting, position, circleColor);
+      }
+    }
+    function addText(setting: { text: string; visible: boolean }) {
+      const { text, visible } = setting;
+      return new fabric.Text(text, {
+        ...fabricConfig.textStyle(),
+        visible: visible,
+        //fontFamily: '3d.demo', //todo
+      });
+    }
+    function addCircle(color: string) {
+      return new fabric.Circle({
+        ...fabricConfig.circleStyle(),
+        fill: color,
+      });
+    }
+    function addGroup(
+      textSetting: { text: string; visible: boolean },
+      position: { left: number; top: number },
+      circleColor: string
+    ) {
+      canvasRef?.current?.add(
+        new fabric.Group([addCircle(circleColor), addText(textSetting)], {
+          ...fabricConfig.groupStyle(),
+          left: position.left,
+          top: position.top,
+          id: textSetting.text,
+        })
+      );
+    }
+  }, [canvasRef, column, dancer, isTextVisible, row]);
 
   useEffect(() => {
     const canvas = canvasRef?.current as fabric.Canvas;
@@ -159,11 +159,17 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
       canvas.off('mouse:down');
       canvas.off('mouse:up');
     };
-  }, []);
+  }, [canvasRef]);
 
   // snap to grid and edge
   useEffect(() => {
     const canvas = canvasRef?.current as fabric.Canvas;
+    const boundaryAxis = {
+      left: fabricConfig.stepUnit(),
+      top: fabricConfig.stepUnit(),
+      right: fabricConfig.gridSize * column - fabricConfig.stepUnit(),
+      bottom: fabricConfig.gridSize * row - fabricConfig.stepUnit(),
+    };
 
     canvas.on('object:moving', function (options) {
       const target = options.target;
@@ -193,8 +199,8 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
 
         if (isOverlap) {
           target.set({
-            left: handleEdgeX + overlapOffset,
-            top: handleEdgeY + overlapOffset,
+            left: handleEdgeX + fabricConfig.overlapOffset,
+            top: handleEdgeY + fabricConfig.overlapOffset,
           });
         }
       });
@@ -202,5 +208,5 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
     return () => {
       canvas.off('object:moving');
     };
-  }, []);
+  }, [canvasRef, column, row]);
 };
