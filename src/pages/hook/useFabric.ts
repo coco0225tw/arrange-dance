@@ -10,7 +10,7 @@ declare module 'fabric/fabric-impl' {
 //https://stackoverflow.com/questions/74032025/how-to-add-a-custom-attribute-to-a-fabricjs-object-with-typescript
 import { roundPositionAndSnap, handleEdgePosition, handleStartingArrangePosition } from '@/utils/fabricUtils';
 export type startingPositionType = 'vertical' | 'horizontal';
-export type startingPositionLine = 1 | 2 | 3;
+export type startingPositionLine = 1 | 2 | 3; //todo
 export const useFabric = () => {
   const { gridSize, defaultDancerCount, gridBackGroundColor, defaultCircleColor, overlapOffset } = fabricConfig;
   const canvasRef = useRef<Canvas | null>(null);
