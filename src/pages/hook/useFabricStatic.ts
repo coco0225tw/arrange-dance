@@ -2,16 +2,20 @@ import { fabric } from 'fabric';
 import { useEffect } from 'react';
 import { Canvas } from 'fabric/fabric-impl';
 import { fabricConfig } from '../../fabricConfig';
+import { useFabricDynamic } from './useFabricDynamic';
 declare module 'fabric/fabric-impl' {
   export interface IObjectOptions {
     id?: string;
   }
 } //todo*
 //https://stackoverflow.com/questions/74032025/how-to-add-a-custom-attribute-to-a-fabricjs-object-with-typescript
+
 import { roundPositionAndSnap, handleEdgePosition, handleStartingArrangePosition } from '@/utils/fabricUtils';
+const { gridSize, defaultDancerCount, gridBackGroundColor, overlapOffset, defaultCircleColor } = fabricConfig;
+
 export type startingPositionType = 'vertical' | 'horizontal';
-export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
-  const { gridSize, defaultDancerCount, gridBackGroundColor, defaultCircleColor, overlapOffset } = fabricConfig;
+export const useFabricStatic = (canvasRef: React.MutableRefObject<Canvas | null>) => {
+  const { addGroup } = useFabricDynamic(canvasRef);
 
   ////會從store拿
   const column = fabricConfig.defaultCol(defaultDancerCount);
@@ -41,7 +45,7 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
     return () => {
       canvasRef?.current?.dispose();
     };
-  }, [canvasRef, column, gridBackGroundColor, gridSize, row]);
+  }, [canvasRef, column, row]);
 
   useEffect(() => {
     generateGrid();
@@ -73,13 +77,13 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
     function addLine(positions: [startX: number, startY: number, endX: number, endY: number]) {
       canvasRef?.current?.add(new fabric.Line(positions, { ...fabricConfig.lineStyle() }));
     }
-  }, [canvasRef, column, gridSize, row]);
+  }, [canvasRef, column, row]);
 
   useEffect(() => {
     addDancers(isTextVisible);
 
     function addDancers(isTextVisible: boolean) {
-      const dancerCount = fabricConfig.defaultDancerCount;
+      const dancerCount = defaultDancerCount;
       const getPositionFunc = handleStartingArrangePosition({
         positionType: startingPositionType,
         col: column,
@@ -93,40 +97,12 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
           text: (i + 1).toString(),
           visible: isTextVisible,
         };
-        const circleColor = fabricConfig.defaultCircleColor;
+        const circleColor = defaultCircleColor;
         const position = getPositionFunc(i);
         addGroup(textSetting, position, circleColor);
       }
     }
-    function addText(setting: { text: string; visible: boolean }) {
-      const { text, visible } = setting;
-      return new fabric.Text(text, {
-        ...fabricConfig.textStyle(),
-        visible: visible,
-        //fontFamily: '3d.demo', //todo
-      });
-    }
-    function addCircle(color: string) {
-      return new fabric.Circle({
-        ...fabricConfig.circleStyle(),
-        fill: color,
-      });
-    }
-    function addGroup(
-      textSetting: { text: string; visible: boolean },
-      position: { left: number; top: number },
-      circleColor: string
-    ) {
-      canvasRef?.current?.add(
-        new fabric.Group([addCircle(circleColor), addText(textSetting)], {
-          ...fabricConfig.groupStyle(),
-          left: position.left,
-          top: position.top,
-          id: textSetting.text,
-        })
-      );
-    }
-  }, [canvasRef, column, dancer, isTextVisible, row]);
+  }, [canvasRef, column, dancer, isTextVisible, row, addGroup]);
 
   useEffect(() => {
     const canvas = canvasRef?.current as fabric.Canvas;
@@ -167,8 +143,8 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
     const boundaryAxis = {
       left: fabricConfig.stepUnit(),
       top: fabricConfig.stepUnit(),
-      right: fabricConfig.gridSize * column - fabricConfig.stepUnit(),
-      bottom: fabricConfig.gridSize * row - fabricConfig.stepUnit(),
+      right: gridSize * column - fabricConfig.stepUnit(),
+      bottom: gridSize * row - fabricConfig.stepUnit(),
     };
 
     canvas.on('object:moving', function (options) {
@@ -199,8 +175,8 @@ export const useFabric = (canvasRef: React.MutableRefObject<Canvas | null>) => {
 
         if (isOverlap) {
           target.set({
-            left: handleEdgeX + fabricConfig.overlapOffset,
-            top: handleEdgeY + fabricConfig.overlapOffset,
+            left: handleEdgeX + overlapOffset,
+            top: handleEdgeY + overlapOffset,
           });
         }
       });

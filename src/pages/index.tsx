@@ -1,12 +1,12 @@
 import { HomeWrapper } from '@/styles';
 import { useRef } from 'react';
 
-import { useFabric } from './hook/useFabric';
+import { useFabricStatic } from './hook/useFabricStatic';
 
 export default function Home() {
   const canvasRef = useRef<fabric.Canvas | null>(null);
-  useFabric(canvasRef);
-
+  useFabricStatic(canvasRef);
+  //todo 存fabric在store裡
   return (
     <HomeWrapper>
       <div className="canvas_wrapper">
