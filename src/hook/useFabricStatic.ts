@@ -1,7 +1,7 @@
 import { fabric } from 'fabric';
 import { useEffect } from 'react';
 import { Canvas } from 'fabric/fabric-impl';
-import { fabricConfig } from '../../fabricConfig';
+import { fabricConfig } from '../fabricConfig';
 import { useFabricDynamic } from './useFabricDynamic';
 declare module 'fabric/fabric-impl' {
   export interface IObjectOptions {
